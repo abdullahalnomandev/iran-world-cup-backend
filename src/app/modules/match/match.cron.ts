@@ -7,6 +7,7 @@ const END_DATE = new Date('2026-07-31T23:59:59Z');
 const isExpired = () => Date.now() > END_DATE.getTime();
 
 let matchCronInitialized = false;
+let liveMatchCronInitialized = false;
 
 
 
@@ -39,9 +40,9 @@ const dailyMatchesUpdate = () => {
 
 
 const everyMinuteCronJob = () => {
-  if (matchCronInitialized) return;
+  if (liveMatchCronInitialized) return;
 
-  matchCronInitialized = true;
+  liveMatchCronInitialized = true;
 
   // Every minute
   setCronJob(

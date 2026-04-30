@@ -32,6 +32,7 @@ async function main() {
         colors.yellow(`♻️  Application listening on port:${config.port}`)
       );
     });
+    console.log(server);
 
     //socket
     const io = new Server(server, {
@@ -45,8 +46,8 @@ async function main() {
     global.io = io;
 
     // Initialize daily standings update cron job
-    dailyStandingsUpdate();
-    logger.info(colors.green('🕐 Daily standings cron job initialized'));
+    // dailyStandingsUpdate();
+    // logger.info(colors.green('🕐 Daily standings cron job initialized'));
 
     dailyMatchesUpdate();
     logger.info(colors.green('🕐 Daily matches cron job initialized'));
