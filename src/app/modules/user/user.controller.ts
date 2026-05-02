@@ -1,9 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import { paginationFields } from '../../../constants/pagination';
 import catchAsync from '../../../shared/catchAsync';
 import { getSingleFilePath } from '../../../shared/getFilePath';
-import pick from '../../../shared/pick';
 import sendResponse from '../../../shared/sendResponse';
 import { UserService } from './user.service';
 
@@ -94,19 +92,7 @@ const updateProfile = catchAsync(
   }
 );
 
-// Add unfollowUser
-const unfollowUser = catchAsync(async (req: Request, res: Response) => {
-  const userId = req.user?.id;
-  const targetId = req.params.id;
 
-  await UserService.unfollowUser(userId, targetId);
-
-  sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: 'Successfully unfollowed the user.',
-  });
-});
 
 // Add getUserProfileById
 const getUserProfileById = catchAsync(async (req: Request, res: Response) => {
@@ -126,115 +112,13 @@ const getUserProfileById = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const getUserActivity = catchAsync(async (req: Request, res: Response) => {
-  const userId = req.user?.id;
-  const requestUserId = req.params?.id;
-
-  const result = await UserService.getUserActivityFromDB(
-    requestUserId,
-    userId,
-    req.query
-  );
-
-  sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: 'Activity list retrieved successfully',
-    pagination: result.pagination,
-    data: result.data,
-  });
-});
-
-const getStatistics = catchAsync(async (req: Request, res: Response) => {
-  const result = await UserService.statistics();
-
-  sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: 'User Statistics retrieved successfully',
-    data: result,
-  });
-});
-
-const UserStatistics = catchAsync(async (req: Request, res: Response) => {
-  const year = Number(req.query?.year) || new Date().getFullYear();
-  const userId = req?.user?.id;
-  const result = await UserService.getUserStatistics(year, userId);
-
-  sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: 'User Statistics retrieved successfully',
-    data: result,
-  });
-});
-
-const UserEarningStatistics = catchAsync(async (req: Request, res: Response) => {
-  const year = Number(req.query?.year) || new Date().getFullYear();
-  const userId = req?.user?.id;
-  const result = await UserService.getAllEarningStatistics(year);
-
-  sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: 'User earning statistics retrieved successfully',
-    data: result,
-  });
-});
 
 
-const toggleProfileUpdate = catchAsync(async (req: Request, res: Response) => {
-  const userId = req.params.id;
-  const result = await UserService.toggleProfileUpdate(userId);
-
-  sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: 'User profile update status toggled successfully',
-    data: result,
-  });
-});
-
-// Default account deletion for logged-in user via req.user + password (kept old version)
-const deleteAccount = catchAsync(async (req: Request, res: Response) => {
-  const userId = req.user?.id;
-  const password = req.body?.password;
-  const result = await UserService.deleteAccount(password, userId);
-
-  sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: 'User account deleted successfully',
-    data: result,
-  });
-});
-
-// New controller for deleting account using email and password for body-based deletion
-const UserDeleteAccount = catchAsync(async (req: Request, res: Response) => {
-  const email = req.body?.email;
-  const password = req.body?.password;
-  const result = await UserService.willBeDeleteUser(email, password);
-
-  sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: 'User account deleted successfully by email',
-    data: result,
-  });
-});
 
 export const UserController = {
   createUser,
   getUserProfile,
   updateProfile,
-  unfollowUser,
   getAllUsers,
-  getUserProfileById,
-  getUserActivity,
-  UserStatistics,
-  getStatistics,
-  UserEarningStatistics,
-  toggleProfileUpdate,
-  deleteAccount,
-  UserDeleteAccount, // Export new delete by email controller
+  getUserProfileById
 };

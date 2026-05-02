@@ -3,6 +3,9 @@ import { AuthRoutes } from '../app/modules/auth/auth.route';
 import { UserRoutes } from '../app/modules/user/user.route';
 import { StandingRoutes } from '../app/modules/standings/standing.route';
 import { MatchRoutes } from '../app/modules/match/match.route';
+import { SettingsRoutes } from '../app/modules/settings/settings.route';
+import { ChantRoutes } from '../app/modules/chant/chant.route';
+import { RoomRoutes } from '../app/modules/room/room.route';
 
 const router = express.Router();
 
@@ -22,6 +25,18 @@ const apiRoutes = [
   {
     path: '/match',
     route: MatchRoutes,
+  },
+  {
+    path: '/settings',
+    route:SettingsRoutes
+  },
+  {
+    path: '/chant',
+    route: ChantRoutes
+  },
+  {
+    path: '/room',
+    route: RoomRoutes
   }
 ];
 

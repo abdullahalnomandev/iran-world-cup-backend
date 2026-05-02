@@ -23,7 +23,7 @@ import { ICreateAccount } from '../../../types/emailTamplate';
 
 //login
 const loginUserFromDB = async (payload: ILoginData) => {
-  const { email, password, google_id_token, apple_id_token } = payload;
+  const { email, password, google_id_token } = payload;
 
   let userInfo = null;
 
@@ -31,15 +31,6 @@ const loginUserFromDB = async (payload: ILoginData) => {
   if (payload.auth_provider === USER_AUTH_PROVIDER.GOOGLE && google_id_token) {
     const tokenData = await getUserInfoWithToken(google_id_token);
     const userEmail = tokenData?.data?.email;
-    userInfo = await User.findOne({ email: userEmail }).select('+password');
-  }
-  //APPLE LOGIN
-  else if (
-    payload.auth_provider === USER_AUTH_PROVIDER.MOBILE &&
-    apple_id_token
-  ) {
-    const tokenData = await getAppleUserInfoWithToken(apple_id_token);
-    const userEmail = tokenData.data.email;
     userInfo = await User.findOne({ email: userEmail }).select('+password');
   }
   // LOCAL LOGIN
@@ -210,7 +201,7 @@ const resetPasswordToDB = async (payload: IAuthResetPassword) => {
   //isExist token
   const isExistToken = await User.findOne({ 'authorization.oneTimeCode': otp });
   if (!isExistToken) {
-    throw new ApiError(StatusCodes.UNAUTHORIZED, 'Token is not valid!');
+    throw new ApiError(StatusCodes.UNAUTHORIZED, 'OTP is not valid!');
   }
 
   // Check OTP expiry
@@ -250,6 +241,7 @@ const changePasswordToDB = async (
   user: JwtPayload,
   payload: IChangePassword
 ) => {
+  console.log(payload);
   const { currentPassword, newPassword, confirmPassword } = payload;
   const isExistUser = await User.findById(user.id).select('+password');
   if (!isExistUser) {
@@ -328,8 +320,9 @@ const resendEmailToDB = async (email: string) => {
   return { message: 'OTP resend successfully' };
 };
 
-const verifyOTP = async (email: string, otp: string) => {
-  const registeredUser = await User.findOne({ email }).lean();
+const verifyOTP = async (otp: string) => {
+  console.log('otp', otp);
+  const registeredUser = await User.findOne({ 'authorization.oneTimeCode': otp }).lean();
 
   if (!registeredUser) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'User not found');
@@ -354,6 +347,26 @@ const verifyOTP = async (email: string, otp: string) => {
   return { message: 'OTP is valid' };
 };
 
+const deleteAccount = async (userId: string, password: string) => {
+  const isExistUser = await User.findById(userId).select('+password');
+  if (!isExistUser) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
+  }
+  
+  //current password match
+  if (
+    password &&
+    !(await User.isMatchPassword(password, isExistUser.password))
+  ) {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'Current password is incorrect'
+    );
+  }
+  
+  await User.findByIdAndDelete(userId);
+};
+
 export const AuthService = {
   resendEmailToDB,
   verifyEmailToDB,
@@ -362,4 +375,5 @@ export const AuthService = {
   resetPasswordToDB,
   changePasswordToDB,
   verifyOTP,
+  deleteAccount
 };

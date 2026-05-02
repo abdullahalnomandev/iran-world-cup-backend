@@ -75,16 +75,27 @@ const resendEmail = catchAsync(async (req: Request, res: Response) => {
 });
 
 const verifyOTPToDb = catchAsync(async (req: Request, res: Response) => {
-  const {email, otp} = req.body;
-  await AuthService.verifyOTP(email,otp);
+  const {otp} = req.body;
+  await AuthService.verifyOTP(otp);
 
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
-    message: 'OTP successfully sent',
+    message: 'OTP successfully verified',
   });
 });
 
+
+const deleteAccount = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user?.id;
+  await AuthService.deleteAccount(userId,req?.body?.currentPassword);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'Account deleted successfully',
+  });
+});
 export const AuthController = {
   resendEmail,
   verifyEmail,
@@ -92,5 +103,6 @@ export const AuthController = {
   forgetPassword,
   resetPassword,
   changePassword,
-  verifyOTPToDb
+  verifyOTPToDb,
+  deleteAccount
 };

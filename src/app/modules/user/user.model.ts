@@ -5,7 +5,7 @@ import config from '../../../config';
 import { USER_ROLES } from '../../../enums/user';
 import ApiError from '../../../errors/ApiError';
 import { IUser, UserModel } from './user.interface';
-import { PROFILE_MODE, USER_AUTH_PROVIDER } from './user.constant';
+import { USER_AUTH_PROVIDER } from './user.constant';
 
 const userSchema = new Schema<IUser, UserModel>(
   {
@@ -18,20 +18,9 @@ const userSchema = new Schema<IUser, UserModel>(
       lowercase: true,
       sparse: true,
     },
-    canAccessFeature: {
-      type: Boolean,
-      default: false,
-    },
     image: {
       type: String,
       default: 'https://i.ibb.co/z5YHLV9/profile.png',
-    },
-    mobile: {
-      type: String,
-      trim: true,
-    },
-    confirm_password: {
-      type: String,
     },
     password: {
       type: String,
@@ -53,37 +42,7 @@ const userSchema = new Schema<IUser, UserModel>(
       type: Boolean,
       default: false,
     },
-    location: {
-      type: String,
-    },
-    occupation: {
-      type: String,
-    },
-    dreamJob: {
-      type: String,
-    },
-    education: {
-      type: String,
-    },
-    about: {
-      type: String,
-    },
-    shipping_address: {
-      type: Object,
-      address: { type: String },
-      contact_number: { type: String },
-    },
-    profile_mode: {
-      type: String,
-      enum: Object.values(PROFILE_MODE),
-      default: PROFILE_MODE.PUBLIC,
-    },
-    preferences: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'Preference',
-      },
-    ],
+
     authorization: {
       oneTimeCode: { type: String },
       expireAt: { type: Date },

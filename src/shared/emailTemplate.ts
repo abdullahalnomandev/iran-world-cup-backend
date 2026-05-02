@@ -9,90 +9,136 @@ const createAccount = (values: ICreateAccount) => {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Verify Your Account</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Verify Account</title>
 </head>
-<body style="font-family: 'Inter', Arial, sans-serif; background: #f7f8fa; margin: 0; padding: 0;">
-  <div style="max-width: 440px; margin: 40px auto; background: #111132; border-radius: 18px; padding: 38px 26px 32px 26px; box-shadow: 0 8px 24px rgba(0,0,0,0.13); text-align: center;">
-    <!-- Title -->
-    <h1 style="color: #fff; font-size: 22px; font-weight: 700; margin: 0 0 18px 0; letter-spacing: 0.5px;">
-      Verify Your Account
-    </h1>
-    <!-- Greeting -->
-    <p style="color: #b3b3d1; font-size: 15px; margin: 0 0 22px 0; line-height: 1.6;">
-      Hi,
-    </p>
-    <!-- Message -->
-    <p style="color: #b3b3d1; font-size: 15px; margin: 0 0 30px 0; line-height: 1.6;">
-      Thank you for signing up! Please use the verification code below to activate your account.
-    </p>
-    <!-- OTP Code Box -->
-    <div style="display: inline-block; background: #6C2FF9; color: #fff; font-size: 28px; font-weight: 700; letter-spacing: 8px; padding: 18px 0; width: 170px; border-radius: 12px; box-shadow: 0 2px 8px rgba(108,47,249,0.13); margin-bottom: 28px;">
-      ${values.otp}
+
+<body style="margin:0; padding:0; background:#0b0b0f; font-family: Arial, sans-serif;">
+
+  <div style="max-width:420px; margin:40px auto; padding:20px;">
+    
+    <!-- Logo -->
+    <div style="text-align:center; margin-bottom:20px;">
+      <h1 style="color:#fff; letter-spacing:6px; font-weight:800;">
+        <span style="color:#ff2c2c;">F</span>N<span style="color:#ff2c2c;">Z</span>N
+      </h1>
     </div>
-    <!-- Expiration Note -->
-    <p style="font-size: 13px; color: #9999b3; margin: 28px 0 0 0;">
-      This code will expire in <strong style="color: #fff;">3 minutes</strong>.
-    </p>
-    <!-- Footer -->
-    <p style="font-size: 12px; color: #777799; margin: 22px 0 0 0; line-height: 1.6;">
-      If you didn’t request this code, you can safely ignore this email.<br />
-      For security reasons, do not share this code with anyone.
-    </p>
+
+    <!-- Card -->
+    <div style="
+      background: rgba(255,255,255,0.05);
+      border-radius:16px;
+      padding:28px 22px;
+      text-align:center;
+      border:1px solid rgba(255,255,255,0.08);
+    ">
+
+      <h2 style="color:#fff; margin-bottom:10px;">Verify OTP</h2>
+
+      <p style="color:#aaa; font-size:14px; margin-bottom:25px;">
+        Enter the code sent to your email
+      </p>
+
+      <!-- OTP -->
+      <div style="
+        background:#111;
+        border-radius:10px;
+        padding:16px;
+        font-size:26px;
+        letter-spacing:10px;
+        color:#fff;
+        font-weight:bold;
+        margin-bottom:20px;
+      ">
+        ${values.otp}
+      </div>
+
+      <!-- Expire -->
+      <p style="color:#ff4d4d; font-size:13px; margin-bottom:20px;">
+        Expires in 3 minutes
+      </p>
+
+      <p style="color:#777; font-size:12px;">
+        Didn’t request this? Ignore this email.
+      </p>
+
+    </div>
   </div>
+
 </body>
 </html>
 `,
   };
 };
-
 const resetPassWord = (values: ICreateAccount) => {
-  const data = {
+  return {
     to: values.email,
-    subject: 'Verify your account',
+    subject: 'Reset Password OTP',
     html: `
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your Verification Code</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Reset Password</title>
 </head>
-<body style="font-family: 'Inter', Arial, sans-serif; background: #f7f8fa; margin: 0; padding: 0;">
-  <div style="max-width: 440px; margin: 40px auto; background: #111132; border-radius: 18px; padding: 38px 26px 32px 26px; box-shadow: 0 8px 24px rgba(0,0,0,0.13); text-align: center;">
-    <!-- Title -->
-    <h1 style="color: #fff; font-size: 22px; font-weight: 700; margin: 0 0 18px 0; letter-spacing: 0.5px;">
-      Verification Code
-    </h1>
-    <!-- Greeting -->
-    <p style="color: #b3b3d1; font-size: 15px; margin: 0 0 22px 0; line-height: 1.6;">
-Hi <strong style="color: #fff;">
-  ${values && values.name ? values.name.split(' ')[0] : ''}
-</strong>,    </p>
-    <!-- Message -->
-    <p style="color: #b3b3d1; font-size: 15px; margin: 0 0 30px 0; line-height: 1.6;">
-      Use the code below to securely sign in to your account.
-    </p>
-    <!-- OTP Code Box -->
-    <div style="display: inline-block; background: #6C2FF9; color: #fff; font-size: 28px; font-weight: 700; letter-spacing: 8px; padding: 18px 0; width: 170px; border-radius: 12px; box-shadow: 0 2px 8px rgba(108,47,249,0.13); margin-bottom: 28px;">
-      ${values.otp}
+
+<body style="margin:0; padding:0; background:#0b0b0f; font-family: Arial, sans-serif;">
+
+  <div style="max-width:420px; margin:40px auto; padding:20px;">
+    
+    <!-- Logo -->
+    <div style="text-align:center; margin-bottom:20px;">
+      <h1 style="color:#fff; letter-spacing:6px; font-weight:800;">
+        <span style="color:#ff2c2c;">F</span>N<span style="color:#ff2c2c;">Z</span>N
+      </h1>
     </div>
-    <!-- Expiration Note -->
-    <p style="font-size: 13px; color: #9999b3; margin: 28px 0 0 0;">
-      This code will expire in <strong style="color: #fff;">3 minutes</strong>.
-    </p>
-    <!-- Footer -->
-    <p style="font-size: 12px; color: #777799; margin: 22px 0 0 0; line-height: 1.6;">
-      If you didn’t request this code, you can safely ignore this email.<br />
-      For security reasons, do not share this code with anyone.
-    </p>
+
+    <!-- Card -->
+    <div style="
+      background: rgba(255,255,255,0.05);
+      border-radius:16px;
+      padding:28px 22px;
+      text-align:center;
+      border:1px solid rgba(255,255,255,0.08);
+    ">
+
+      <h2 style="color:#fff;">Reset Password</h2>
+
+      <p style="color:#aaa; font-size:14px; margin:15px 0;">
+        Hi ${values?.name?.split(' ')[0] || ''},
+      </p>
+
+      <p style="color:#aaa; font-size:14px; margin-bottom:25px;">
+        Use the code below to reset your password
+      </p>
+
+      <!-- OTP -->
+      <div style="
+        background:#111;
+        border-radius:10px;
+        padding:16px;
+        font-size:26px;
+        letter-spacing:10px;
+        color:#fff;
+        font-weight:bold;
+        margin-bottom:20px;
+      ">
+        ${values.otp}
+      </div>
+
+      <p style="color:#ff4d4d; font-size:13px;">
+        Expires in 3 minutes
+      </p>
+
+    </div>
   </div>
+
 </body>
 </html>
 `,
   };
-  return data;
 };
 
 export const emailTemplate = {

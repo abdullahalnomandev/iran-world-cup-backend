@@ -42,9 +42,13 @@ router.post(
 
 router.post(
   '/change-password',
-  auth(USER_ROLES.ADMIN, USER_ROLES.USER),
-  validateRequest(AuthValidation.createChangePasswordZodSchema),
+  auth(USER_ROLES.ADMIN, USER_ROLES.USER, USER_ROLES.SUPER_ADMIN),
   AuthController.changePassword
 );
 
+router.delete(
+  '/delete-account',
+  auth(USER_ROLES.ADMIN, USER_ROLES.USER, USER_ROLES.SUPER_ADMIN),
+  AuthController.deleteAccount
+);
 export const AuthRoutes = router;
