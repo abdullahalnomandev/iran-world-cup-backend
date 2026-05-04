@@ -5,6 +5,8 @@ import { IRoom } from './room.interface';
 import { Room } from './room.model';
 import generateOTP from '../../../util/generateOTP';
 import { RoomChant } from './roomChant/roomChant.model';
+import { IRoomAnnouncement } from './announcement/announcement.interface';
+import { RoomAnnouncement } from './announcement/announcement.model';
 
 // Create room
 const createRoomToDB = async (payload: Partial<IRoom>): Promise<IRoom> => {
@@ -60,8 +62,15 @@ const getAllRoomsFromDB = async (query: Record<string, any>) => {
 const getSingleRoomFromDB = async (
   id: string,
   userId?: string,
-): Promise<(Omit<IRoom, keyof Document> & { roomChants: any[]; isHost: boolean }) | null> => {
-  const [result, roomChants] = await Promise.all([
+): Promise<
+  | (Omit<IRoom, keyof Document> & {
+      roomChants: any[];
+      isHost: boolean;
+      announcements: IRoomAnnouncement[];
+    })
+  | null
+> => {
+  const [result, roomChants, announcements] = await Promise.all([
     Room.findById(id, '-location -updatedAt -__v')
       .populate('creator', 'name image')
       .lean()
@@ -69,6 +78,10 @@ const getSingleRoomFromDB = async (
 
     RoomChant.find({ room: id }, '-room -createdAt -updatedAt -__v')
       .populate('chant', '-isActive -createdAt -updatedAt -__v')
+      .lean()
+      .exec(),
+
+    RoomAnnouncement.find({ room_id: id }, '-room_id -updatedAt -__v')
       .lean()
       .exec(),
   ]);
@@ -81,6 +94,7 @@ const getSingleRoomFromDB = async (
     ...result,
     isHost: result.creator._id.toString() === userId,
     roomChants: roomChants.filter(rc => rc.chant !== null),
+    announcements: announcements,
   };
 };
 
@@ -267,6 +281,29 @@ const removeChantFromRoomFromDB = async (
   return room;
 };
 
+// Create room announcement
+const createRoomAnnouncementFromDB = async (
+  roomId: string,
+  content: string,
+): Promise<IRoomAnnouncement | null> => {
+  const room = await Room.findById(roomId);
+  if (!room) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Room not found');
+  }
+
+  const io = (global as any).io;
+
+  const announcement = await RoomAnnouncement.create({
+    room_id: roomId,
+    content,
+  });
+
+  // Emit announcement to room
+  io.emit(`room::${roomId}`, announcement);
+
+  return announcement;
+};
+
 export const RoomService = {
   createRoomToDB,
   getAllRoomsFromDB,
@@ -278,4 +315,5 @@ export const RoomService = {
   getRoomsNearLocationFromDB,
   addChantToRoomFromDB,
   removeChantFromRoomFromDB,
+  createRoomAnnouncementFromDB,
 };

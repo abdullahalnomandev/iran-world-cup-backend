@@ -164,6 +164,21 @@ const removeChantFromRoom = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// Create room announcement
+const createRoomAnnouncement = catchAsync(async (req: Request, res: Response) => {
+  const { roomId } = req.params;
+  const { content } = req.body;
+
+  const result = await RoomService.createRoomAnnouncementFromDB(roomId, content);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'Room announcement created successfully',
+    data: result,
+  });
+});
+
 export const RoomController = {
   createRoom,
   getAllRooms,
@@ -175,4 +190,5 @@ export const RoomController = {
   getRoomsNearLocation,
   addChantToRoom,
   removeChantFromRoom,
+  createRoomAnnouncement
 };

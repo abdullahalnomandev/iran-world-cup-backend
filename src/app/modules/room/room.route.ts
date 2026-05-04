@@ -72,4 +72,12 @@ router.delete(
   RoomController.removeChantFromRoom
 );
 
+// ROOM_ANNOUNCEMENT
+
+router.post(
+  '/:roomId/announcement',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN, USER_ROLES.USER),
+  RoomController.createRoomAnnouncement
+);
+
 export const RoomRoutes = router;
