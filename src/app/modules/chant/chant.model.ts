@@ -24,6 +24,12 @@ const chantSchema = new Schema<IChant, ChantModel>(
       required: true,
       trim: true,
     },
+    translation: {
+      type: String
+    },
+    transliteration: {
+      type: String
+    },
     isActive: {
       type: Boolean,
       default: true,

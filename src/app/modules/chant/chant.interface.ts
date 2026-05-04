@@ -6,6 +6,8 @@ export interface IChant extends Document {
   audio: string;
   country?: string;
   isActive: boolean;
+  translation?: string;
+  transliteration?: string;
   createdAt: Date;
   updatedAt: Date;
 }

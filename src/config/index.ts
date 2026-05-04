@@ -9,6 +9,9 @@ export default {
   port: process.env.PORT,
   bcrypt_salt_rounds: process.env.BCRYPT_SALT_ROUNDS,
   front_end_app_url: process.env.FRONTEND_URL,  
+  openai: {
+    api_key: process.env.OPENAI_API_KEY,
+  },
   jwt: {
     jwt_secret: process.env.JWT_SECRET,
     jwt_expire_in: process.env.JWT_EXPIRE_IN,

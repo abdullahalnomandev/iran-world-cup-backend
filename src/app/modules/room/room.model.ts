@@ -34,6 +34,11 @@ const roomSchema = new Schema<IRoom, RoomModel>(
       required: true,
       trim: true,
     },
+    room_id: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     country: {
       type: String,
       required: true,

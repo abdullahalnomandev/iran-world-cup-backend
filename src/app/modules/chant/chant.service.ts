@@ -3,10 +3,17 @@ import ApiError from '../../../errors/ApiError';
 import QueryBuilder from '../../builder/QueryBuilder';
 import { IChant } from './chant.interface';
 import { Chant } from './chant.model';
+import { getTranslation } from './chant.util';
 
 // Create chant
 const createChantToDB = async (payload: Partial<IChant>): Promise<IChant> => {
-  const result = await Chant.create(payload);
+  const translation = await getTranslation(payload.title || '');
+
+  const result = await Chant.create({
+    ...payload,
+    translation: translation.translation,
+    transliteration: translation.transliteration
+  });
   return result;
 };
 
@@ -58,16 +65,7 @@ const updateChantToDB = async (
 
 // Delete chant (soft delete - set isActive to false)
 const deleteChantFromDB = async (id: string): Promise<IChant | null> => {
-  const isExist = await Chant.findOne({ _id: id, isActive: true });
-  if (!isExist) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Chant not found');
-  }
-
-  const result = await Chant.findOneAndUpdate(
-    { _id: id },
-    { isActive: false },
-    { new: true }
-  );
+  const result = await Chant.findByIdAndDelete(id);
   return result;
 };
 
