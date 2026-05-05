@@ -51,6 +51,7 @@
     "nodemailer": "^6.9.14",
     "npm": "^10.8.1",
     "openai": "^6.35.0",
+    "puppeteer": "^24.42.0",
     "redis": "^5.12.1",
     "socket.io": "^4.7.5",
     "stripe": "^19.2.1",

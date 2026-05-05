@@ -1,4 +1,5 @@
 import { StatusCodes } from 'http-status-codes';
+import mongoose from 'mongoose';
 import ApiError from '../../../errors/ApiError';
 import QueryBuilder from '../../builder/QueryBuilder';
 import { IRoom } from './room.interface';
@@ -7,6 +8,7 @@ import generateOTP from '../../../util/generateOTP';
 import { RoomChant } from './roomChant/roomChant.model';
 import { IRoomAnnouncement } from './announcement/announcement.interface';
 import { RoomAnnouncement } from './announcement/announcement.model';
+import { RoomMember } from './roomMembers/roomMember.model';
 
 // Create room
 const createRoomToDB = async (payload: Partial<IRoom>): Promise<IRoom> => {
@@ -25,6 +27,11 @@ const createRoomToDB = async (payload: Partial<IRoom>): Promise<IRoom> => {
   console.log(data);
   const result = await Room.create(data);
 
+  await RoomMember.create({
+    room: result._id,
+    user: payload.creator,
+  });
+
   if (payload.roomChants && payload.roomChants.length > 0) {
     RoomChant.insertMany(
       payload.roomChants.map((chant: any) => ({
@@ -38,10 +45,10 @@ const createRoomToDB = async (payload: Partial<IRoom>): Promise<IRoom> => {
 };
 
 // Get all rooms with filtering and pagination
-const getAllRoomsFromDB = async (query: Record<string, any>) => {
+const getAllRoomsFromDB = async (query: Record<string, any>, userId?: string) => {
   const roomQuery = new QueryBuilder(Room.find(), query)
     .search(['name', 'title', 'country'])
-    .filter(['country', 'match_id'])
+    .filter()
     .sort()
     .paginate()
     .fields();
@@ -50,10 +57,60 @@ const getAllRoomsFromDB = async (query: Record<string, any>) => {
     path: 'creator',
     select: 'name email image',
   });
+
   const pagination = await roomQuery.getPaginationInfo();
 
+  // 👉 Get member counts and user membership status in single aggregation
+  const roomIds = result.map(r => r._id);
+  const memberStats = await RoomMember.aggregate([
+    {
+      $match: {
+        room: { $in: roomIds },
+      },
+    },
+    {
+      $group: {
+        _id: '$room',
+        memberCount: { $sum: 1 },
+        isUserMember: {
+          $sum: {
+            $cond: [
+              { $eq: ['$user', userId ? new mongoose.Types.ObjectId(userId) : null] },
+              1,
+              0,
+            ],
+          },
+        },
+      },
+    },
+  ]);
+
+  // 👉 Convert to maps for easy lookup
+  const statsMap = memberStats.reduce(
+    (acc, stat) => {
+      acc[stat._id.toString()] = {
+        memberCount: stat.memberCount,
+        isMember: userId ? stat.isUserMember > 0 : false,
+      };
+      return acc;
+    },
+    {} as Record<string, { memberCount: number; isMember: boolean }>,
+  );
+
+  // 👉 Attach stats to each room
+  const data = result.map((room: any) => {
+    const roomId = (room._id as any).toString();
+    const stats = statsMap[roomId] || { memberCount: 0, isMember: false };
+    
+    return {
+      ...room.toObject(),
+      memberCount: stats.memberCount,
+      isMember: stats.isMember,
+    };
+  });
+
   return {
-    data: result,
+    data,
     pagination,
   };
 };
@@ -67,10 +124,11 @@ const getSingleRoomFromDB = async (
       roomChants: any[];
       isHost: boolean;
       announcements: IRoomAnnouncement[];
+      roomMembers: any[];
     })
   | null
 > => {
-  const [result, roomChants, announcements] = await Promise.all([
+  const [result, roomChants, announcements, roomMembers] = await Promise.all([
     Room.findById(id, '-location -updatedAt -__v')
       .populate('creator', 'name image')
       .lean()
@@ -84,6 +142,8 @@ const getSingleRoomFromDB = async (
     RoomAnnouncement.find({ room_id: id }, '-room_id -updatedAt -__v')
       .lean()
       .exec(),
+      
+    RoomMember.countDocuments({ room: id }),
   ]);
 
   if (!result) {
@@ -95,6 +155,7 @@ const getSingleRoomFromDB = async (
     isHost: result.creator._id.toString() === userId,
     roomChants: roomChants.filter(rc => rc.chant !== null),
     announcements: announcements,
+    roomMembers: roomMembers,
   };
 };
 
@@ -304,6 +365,35 @@ const createRoomAnnouncementFromDB = async (
   return announcement;
 };
 
+// Join room
+const joinRoomFromDB = async (roomId: string, room_code: string, userId: string): Promise<any> => {
+
+  const room = await Room.findOne({ _id: roomId, room_id: room_code });
+  if (!room) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Room not found!');
+  }
+
+  // Add user to room's members array if not already present
+  const isMemberExist = await RoomMember.findOne({
+    room: roomId,
+    user: userId
+  });
+
+  if (isMemberExist) {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'You are already a member of this room',
+    );
+  }
+
+  const member = await RoomMember.create({
+    room: roomId,
+    user: userId,
+  });
+
+  return member;
+};
+
 export const RoomService = {
   createRoomToDB,
   getAllRoomsFromDB,
@@ -316,4 +406,5 @@ export const RoomService = {
   addChantToRoomFromDB,
   removeChantFromRoomFromDB,
   createRoomAnnouncementFromDB,
+  joinRoomFromDB,
 };

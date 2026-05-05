@@ -24,7 +24,7 @@ const createRoom = catchAsync(async (req: Request, res: Response) => {
 // Get all rooms
 const getAllRooms = catchAsync(async (req: Request, res: Response) => {
   const query = req.query;
-  const result = await RoomService.getAllRoomsFromDB(query);
+  const result = await RoomService.getAllRoomsFromDB(query, req?.user?.id);
 
   sendResponse(res, {
     success: true,
@@ -179,6 +179,21 @@ const createRoomAnnouncement = catchAsync(async (req: Request, res: Response) =>
   });
 });
 
+// Join room
+const joinRoom = catchAsync(async (req: Request, res: Response) => {
+  const { roomId } = req.params;
+  const { room_code } = req?.body;
+
+  const result = await RoomService.joinRoomFromDB(roomId, room_code, req.user?.id);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'Room joined successfully',
+    data: result,
+  });
+});
+
 export const RoomController = {
   createRoom,
   getAllRooms,
@@ -190,5 +205,6 @@ export const RoomController = {
   getRoomsNearLocation,
   addChantToRoom,
   removeChantFromRoom,
-  createRoomAnnouncement
+  createRoomAnnouncement,
+  joinRoom
 };

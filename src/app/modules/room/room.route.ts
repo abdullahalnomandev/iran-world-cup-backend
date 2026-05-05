@@ -16,6 +16,7 @@ router.post(
 // Get all rooms (public)
 router.get(
   '/',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN, USER_ROLES.USER),
   RoomController.getAllRooms
 );
 
@@ -78,6 +79,14 @@ router.post(
   '/:roomId/announcement',
   auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN, USER_ROLES.USER),
   RoomController.createRoomAnnouncement
+);
+
+// ROOM_MEMBER
+
+router.post(
+  '/:roomId/join',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN, USER_ROLES.USER),
+  RoomController.joinRoom
 );
 
 export const RoomRoutes = router;
