@@ -241,7 +241,6 @@ const changePasswordToDB = async (
   user: JwtPayload,
   payload: IChangePassword
 ) => {
-  console.log(payload);
   const { currentPassword, newPassword, confirmPassword } = payload;
   const isExistUser = await User.findById(user.id).select('+password');
   if (!isExistUser) {
@@ -321,7 +320,6 @@ const resendEmailToDB = async (email: string) => {
 };
 
 const verifyOTP = async (otp: string) => {
-  console.log('otp', otp);
   const registeredUser = await User.findOne({ 'authorization.oneTimeCode': otp }).lean();
 
   if (!registeredUser) {

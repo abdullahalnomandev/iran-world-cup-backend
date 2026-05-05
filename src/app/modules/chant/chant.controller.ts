@@ -13,7 +13,6 @@ const createChant = catchAsync(async (req: Request, res: Response) => {
     ...req.body,
     audio: audio || req.body.audio,
   };
-  console.log({audio})
 
   const result = await ChantService.createChantToDB(payload);
 

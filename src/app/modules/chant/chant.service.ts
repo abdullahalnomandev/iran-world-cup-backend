@@ -19,7 +19,6 @@ const createChantToDB = async (payload: Partial<IChant>): Promise<IChant> => {
 
 // Get all chants with filtering and pagination
 const getAllChantsFromDB = async (query: Record<string, any>) => {
-  console.log(query);
   const chantQuery = new QueryBuilder(Chant.find(), query)
     .search(['title', 'category', 'country'])
     .filter()
@@ -55,9 +54,20 @@ const updateChantToDB = async (
     throw new ApiError(StatusCodes.NOT_FOUND, 'Chant not found');
   }
 
+  // Add translation if title is being updated
+  let updatePayload = { ...payload };
+  if (payload.title) {
+    const translation = await getTranslation(payload.title);
+    updatePayload = {
+      ...payload,
+      translation: translation.translation,
+      transliteration: translation.transliteration
+    };
+  }
+
   const result = await Chant.findOneAndUpdate(
     { _id: id },
-    { $set: payload },
+    { $set: updatePayload },
     { new: true, runValidators: true }
   );
   return result;

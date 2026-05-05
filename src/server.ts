@@ -18,7 +18,6 @@ process.on('uncaughtException', error => {
 let server: any;
 async function main() {
   try {
-    console.log(config.database_url);
     mongoose.connect(config.database_url as string);
     logger.info(colors.green('🚀 Database connected successfully'));
 
@@ -32,7 +31,6 @@ async function main() {
         colors.yellow(`♻️  Application listening on port:${config.port}`)
       );
     });
-    console.log(server);
 
     //socket
     const io = new Server(server, {

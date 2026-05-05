@@ -65,7 +65,6 @@ const updateStandingsData = async (leagueId: number = 28): Promise<void> => {
         });
 
       await Standing.insertMany(uniqueRows, { ordered: false });
-      console.log(`Successfully updated ${uniqueRows.length} standings records for World Cup -> league ${leagueId}`);
     } else {
       console.log(`No standings data found for league ${leagueId}`);
     }

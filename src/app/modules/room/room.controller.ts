@@ -30,7 +30,7 @@ const getAllRooms = catchAsync(async (req: Request, res: Response) => {
     success: true,
     statusCode: StatusCodes.OK,
     message: 'Rooms retrieved successfully',
-    pagination: result.pagination,
+    pagination: result.pagination as any,
     data: result.data,
   });
 });
@@ -194,6 +194,21 @@ const joinRoom = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// Trigger room chant
+const triggerRoomChant = catchAsync(async (req: Request, res: Response) => {
+  const { roomId } = req.params;
+  const { chant_id } = req.body;
+
+  const result = await RoomService.triggerRoomChantFromDB(roomId, chant_id);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'Room chant triggered successfully',
+    data: result,
+  });
+});
+
 export const RoomController = {
   createRoom,
   getAllRooms,
@@ -206,5 +221,6 @@ export const RoomController = {
   addChantToRoom,
   removeChantFromRoom,
   createRoomAnnouncement,
-  joinRoom
+  joinRoom,
+  triggerRoomChant
 };

@@ -23,6 +23,7 @@ export interface IUser {
   };
   image: string;
   token?: string;
+  fcmToken?: string;
   authorization?: {
     oneTimeCode: string;
     expireAt: Date;

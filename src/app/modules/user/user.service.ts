@@ -105,11 +105,8 @@ const createUserToDB = async (
 
 const getUserProfileFromDB = async (user: JwtPayload): Promise<any> => {
 
-  console.log("id", user.id);
-  // Only unselect the arrays but still need to count their lengths, so will fetch their counts
   const isExistUser = await User.findById(user.id).lean();
 
-  console.log("isExistUser", isExistUser);
   if (!isExistUser) {
     throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
   }

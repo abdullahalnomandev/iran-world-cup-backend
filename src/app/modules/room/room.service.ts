@@ -9,6 +9,11 @@ import { RoomChant } from './roomChant/roomChant.model';
 import { IRoomAnnouncement } from './announcement/announcement.interface';
 import { RoomAnnouncement } from './announcement/announcement.model';
 import { RoomMember } from './roomMembers/roomMember.model';
+import { User } from '../user/user.model';
+import { USER_ROLES } from '../../../enums/user';
+import { IUser } from '../user/user.interface';
+import admin from '../../../helpers/firebaseConfig';
+import { Chant } from '../chant/chant.model';
 
 // Create room
 const createRoomToDB = async (payload: Partial<IRoom>): Promise<IRoom> => {
@@ -24,7 +29,6 @@ const createRoomToDB = async (payload: Partial<IRoom>): Promise<IRoom> => {
   delete data.lat;
   delete data.log;
   delete data?.roomChants;
-  console.log(data);
   const result = await Room.create(data);
 
   await RoomMember.create({
@@ -487,6 +491,34 @@ const createRoomAnnouncementFromDB = async (
   // Emit announcement to room
   io.emit(`room::${roomId}`, announcement);
 
+  // SEND PUSH NOTIFICATION TO ROOM MEMBERS EXCEPT CREATOR/HOST
+  const creatorId = room.creator.toString();
+  const users = await RoomMember.find({
+    room: roomId,
+    user: { $ne: creatorId },
+  })
+    .populate('user', 'fcmToken _id role active')
+    .lean();
+
+  // Push notifications
+  await Promise.allSettled(
+    users
+      .filter(user => (user.user as IUser)?.fcmToken)
+      .map(user =>
+        admin.messaging().send({
+          token: (user.user as IUser)?.fcmToken!,
+          notification: {
+            title: 'New Announcement',
+            body: content,
+          },
+          data: {
+            roomId,
+            content,
+          },
+        }),
+      ),
+  );
+
   return announcement;
 };
 
@@ -522,6 +554,48 @@ const joinRoomFromDB = async (
   return member;
 };
 
+// Trigger room chant
+const triggerRoomChantFromDB = async (roomId: string, chantId: string): Promise<any> => {
+  const room = await Room.findById(roomId);
+  if (!room) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Room not found');
+  }
+
+  // Validate chant exists
+  const chant = await Chant.findById(chantId);
+  if (!chant) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Chant not found');
+  }
+
+  // Emit chant to room
+  const io = (global as any).io;
+  io.emit(`chant::${roomId}`, chant);
+
+  // SEND PUSH NOTIFICATION TO ROOM MEMBERS EXCEPT CREATOR/HOST
+  const roomMembers = await RoomMember.find({ room: roomId, user: { $ne: room.creator } }).populate('user', 'fcmToken _id role active').lean();
+  
+  await Promise.allSettled(
+    roomMembers
+      .filter(member => (member.user as IUser)?.fcmToken)
+      .map(member =>
+        admin.messaging().send({
+          token: (member.user as IUser)?.fcmToken!,
+          notification: {
+            title: 'New Chant',
+            body: chant.title,
+          },
+          data: {
+            roomId,
+            chantId,
+            chantTitle: chant.title,
+          },
+        }),
+      ),
+  );
+  
+  return chant;
+};
+
 export const RoomService = {
   createRoomToDB,
   getAllRoomsFromDB,
@@ -535,4 +609,5 @@ export const RoomService = {
   removeChantFromRoomFromDB,
   createRoomAnnouncementFromDB,
   joinRoomFromDB,
+  triggerRoomChantFromDB,
 };
