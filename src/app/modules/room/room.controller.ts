@@ -209,6 +209,20 @@ const triggerRoomChant = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// Leave room
+const leaveRoom = catchAsync(async (req: Request, res: Response) => {
+  const { roomId } = req.params;
+
+  const result = await RoomService.leaveRoomFromDB(roomId, req.user?.id);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'Room left successfully',
+    data: result,
+  });
+});
+
 export const RoomController = {
   createRoom,
   getAllRooms,
@@ -222,5 +236,6 @@ export const RoomController = {
   removeChantFromRoom,
   createRoomAnnouncement,
   joinRoom,
-  triggerRoomChant
+  triggerRoomChant,
+  leaveRoom
 };

@@ -89,6 +89,13 @@ router.post(
   RoomController.joinRoom
 );
 
+// LEAVE ROOM
+router.post(
+  '/:roomId/leave',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN, USER_ROLES.USER),
+  RoomController.leaveRoom
+);
+
 // TRIGGER ROOM CHANTS UPDATE
 router.post(
   '/:roomId/trigger-chant',

@@ -657,6 +657,23 @@ const triggerRoomChantFromDB = async (
   return chant;
 };
 
+// Leave room
+const leaveRoomFromDB = async (roomId: string, userId: string): Promise<any> => {
+  const room = await Room.findById(roomId);
+  if (!room) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Room not found');
+  }
+
+  const member = await RoomMember.findOneAndDelete({
+    room: roomId,
+    user: userId,
+  });
+
+  return member;
+};
+
+
+
 export const RoomService = {
   createRoomToDB,
   getAllRoomsFromDB,
@@ -671,4 +688,5 @@ export const RoomService = {
   createRoomAnnouncementFromDB,
   joinRoomFromDB,
   triggerRoomChantFromDB,
+  leaveRoomFromDB,
 };
