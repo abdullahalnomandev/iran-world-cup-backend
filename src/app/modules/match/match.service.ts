@@ -3,6 +3,7 @@ import QueryBuilder from '../../builder/QueryBuilder';
 import { apiClient } from '../../../util/apiClient';
 import { logger } from '../../../shared/logger';
 import { IMatch } from './match.interface';
+import { pushNotificationToAllUsers } from './match.util';
 
 const getAllMatchesFromDB = async (query: Record<string, any>) => {
   const leagueId = Number(query.league_id) || 28;
@@ -148,6 +149,7 @@ const updateLiveMatchesData = async (leagueId: number = 28): Promise<void> => {
     });
 
     const matches = data?.data || [];
+    let isGoal = false;
 
     await Promise.all(
       matches.map(async (match: any) => {
@@ -192,10 +194,17 @@ const updateLiveMatchesData = async (leagueId: number = 28): Promise<void> => {
           );
           if (!!updatedMatch) {
             io.emit('match::updated', match);
+            if (updatedMatch.score !== existing.score) {
+              isGoal = true;
+            }
           }
         }
       }),
     );
+    // SET PUSH notification for goal
+    if (isGoal) {
+      pushNotificationToAllUsers(isGoal);
+    }
   } catch (error) {
     logger.error('❌ Failed to update live matches:', error);
     throw error;

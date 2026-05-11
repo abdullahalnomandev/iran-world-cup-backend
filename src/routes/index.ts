@@ -6,6 +6,7 @@ import { MatchRoutes } from '../app/modules/match/match.route';
 import { SettingsRoutes } from '../app/modules/settings/settings.route';
 import { ChantRoutes } from '../app/modules/chant/chant.route';
 import { RoomRoutes } from '../app/modules/room/room.route';
+import { NotificationRoutes } from '../app/modules/notification/notification.route';
 
 const router = express.Router();
 
@@ -37,6 +38,10 @@ const apiRoutes = [
   {
     path: '/room',
     route: RoomRoutes
+  },
+  {
+    path: '/notification',
+    route: NotificationRoutes
   }
 ];
 

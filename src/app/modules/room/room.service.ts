@@ -14,6 +14,8 @@ import { USER_ROLES } from '../../../enums/user';
 import { IUser } from '../user/user.interface';
 import admin from '../../../helpers/firebaseConfig';
 import { Chant } from '../chant/chant.model';
+import { Notification } from '../notification/notification.mode';
+import { NotificationCount } from '../notification/notificationCountModel';
 
 // Create room
 const createRoomToDB = async (payload: Partial<IRoom>): Promise<IRoom> => {
@@ -519,6 +521,31 @@ const createRoomAnnouncementFromDB = async (
       ),
   );
 
+  // DB operations (with logging)
+  await Promise.allSettled(
+    users.map(async user => {
+      try {
+        await Notification.create({
+          receiver: user._id,
+          title: 'New Announcement',
+          message: content,
+          refId: roomId,
+          sender: null,
+          path: '/room',
+          seen: false,
+        });
+
+        await NotificationCount.findOneAndUpdate(
+          { user: user._id },
+          { $inc: { count: 1 } },
+          { new: true, upsert: true },
+        );
+      } catch (err) {
+        console.error('Notification DB error for user:', user._id, err);
+      }
+    }),
+  );
+
   return announcement;
 };
 
@@ -555,7 +582,10 @@ const joinRoomFromDB = async (
 };
 
 // Trigger room chant
-const triggerRoomChantFromDB = async (roomId: string, chantId: string): Promise<any> => {
+const triggerRoomChantFromDB = async (
+  roomId: string,
+  chantId: string,
+): Promise<any> => {
   const room = await Room.findById(roomId);
   if (!room) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Room not found');
@@ -572,8 +602,14 @@ const triggerRoomChantFromDB = async (roomId: string, chantId: string): Promise<
   io.emit(`chant::${roomId}`, chant);
 
   // SEND PUSH NOTIFICATION TO ROOM MEMBERS EXCEPT CREATOR/HOST
-  const roomMembers = await RoomMember.find({ room: roomId, user: { $ne: room.creator } }).populate('user', 'fcmToken _id role active').lean();
-  
+  const roomMembers = await RoomMember.find({
+    room: roomId,
+    user: { $ne: room.creator },
+  })
+    .populate('user', 'fcmToken _id role active')
+    .lean();
+
+  // Send push notifications to room members
   await Promise.allSettled(
     roomMembers
       .filter(member => (member.user as IUser)?.fcmToken)
@@ -592,7 +628,32 @@ const triggerRoomChantFromDB = async (roomId: string, chantId: string): Promise<
         }),
       ),
   );
-  
+
+  // Create notifications for room members
+  await Promise.allSettled(
+    roomMembers.map(async member => {
+      try {
+        await Notification.create({
+          receiver: member.user._id,
+          title: 'New Chant',
+          message: chant.title,
+          refId: roomId,
+          sender: null,
+          path: '/room',
+          seen: false,
+        });
+
+        await NotificationCount.findOneAndUpdate(
+          { user: member.user._id },
+          { $inc: { count: 1 } },
+          { new: true, upsert: true },
+        );
+      } catch (err) {
+        console.error('Notification DB error for user:', member.user._id, err);
+      }
+    }),
+  );
+
   return chant;
 };
 

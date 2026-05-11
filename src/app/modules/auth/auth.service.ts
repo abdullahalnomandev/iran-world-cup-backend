@@ -20,6 +20,7 @@ import {
 import { IUser } from '../user/user.interface';
 import generateOTP from '../../../util/generateOTP';
 import { ICreateAccount } from '../../../types/emailTamplate';
+import { Notification } from '../notification/notification.mode';
 
 //login
 const loginUserFromDB = async (payload: ILoginData) => {
@@ -135,12 +136,12 @@ const verifyEmailToDB = async (otp: string) => {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'OTP is not valid.');
   }
 
-  if (registeredUser.verified) {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      'This account already verified'
-    );
-  }
+  // if (registeredUser.verified) {
+  //   throw new ApiError(
+  //     StatusCodes.BAD_REQUEST,
+  //     'This account already verified'
+  //   );
+  // }
 
   // Check if authentication, OTP, and expireAt exist
   if (!registeredUser?.authorization?.oneTimeCode) {
