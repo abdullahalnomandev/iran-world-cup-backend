@@ -47,12 +47,12 @@ async function main() {
     // dailyStandingsUpdate();
     // logger.info(colors.green('🕐 Daily standings cron job initialized'));
 
-    // dailyMatchesUpdate();
-    // logger.info(colors.green('🕐 Daily matches cron job initialized'));
+    dailyMatchesUpdate();
+    logger.info(colors.green('🕐 Daily matches cron job initialized'));
 
  
-    // everyMinuteCronJob();
-    // logger.info(colors.green('🕐 every minutes goal and live and update initialized'));
+    everyMinuteCronJob();
+    logger.info(colors.green('🕐 every minutes goal and live and update initialized'));
 
   } catch (error) {
     errorLogger.error(colors.red('🤢 Failed to connect Database'));

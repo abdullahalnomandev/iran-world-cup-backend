@@ -142,8 +142,8 @@ const updateLiveMatchesData = async (leagueId: number = 28): Promise<void> => {
     const { data } = await apiClient.get('/matches', {
       params: {
         league_id: leagueId,
-        // date: '2026-06-12',
-        date: formattedDate,
+        date: '2026-06-11',
+        // date: formattedDate,
         limit: 50,
       },
     });

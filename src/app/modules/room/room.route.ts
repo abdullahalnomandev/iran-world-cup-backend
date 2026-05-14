@@ -84,7 +84,7 @@ router.post(
 // ROOM_MEMBER
 
 router.post(
-  '/:roomId/join',
+  '/join',
   auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN, USER_ROLES.USER),
   RoomController.joinRoom
 );

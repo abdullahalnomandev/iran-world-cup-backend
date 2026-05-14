@@ -181,10 +181,9 @@ const createRoomAnnouncement = catchAsync(async (req: Request, res: Response) =>
 
 // Join room
 const joinRoom = catchAsync(async (req: Request, res: Response) => {
-  const { roomId } = req.params;
   const { room_code } = req?.body;
 
-  const result = await RoomService.joinRoomFromDB(roomId, room_code, req.user?.id);
+  const result = await RoomService.joinRoomFromDB(room_code, req.user?.id);
 
   sendResponse(res, {
     success: true,

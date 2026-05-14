@@ -16,6 +16,8 @@ import admin from '../../../helpers/firebaseConfig';
 import { Chant } from '../chant/chant.model';
 import { Notification } from '../notification/notification.mode';
 import { NotificationCount } from '../notification/notificationCountModel';
+import { Match } from '../match/match.model';
+import { IMatch } from '../match/match.interface';
 
 // Create room
 const createRoomToDB = async (payload: Partial<IRoom>): Promise<IRoom> => {
@@ -256,6 +258,7 @@ const getSingleRoomFromDB = async (
       isHost: boolean;
       announcements: IRoomAnnouncement[];
       roomMembers: number;
+      match: IMatch | null;
     })
   | null
 > => {
@@ -277,6 +280,9 @@ const getSingleRoomFromDB = async (
     RoomMember.countDocuments({ room: id }),
   ]);
 
+  const match = await Match.findOne(
+    { match_id: Number(result?.match_id) }  );
+
   if (!result) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Room not found');
   }
@@ -287,6 +293,7 @@ const getSingleRoomFromDB = async (
     roomChants: roomChants.filter(rc => rc.chant !== null),
     announcements: announcements,
     roomMembers: roomMembers,
+    match: match || null,
   };
 };
 
@@ -548,33 +555,28 @@ const createRoomAnnouncementFromDB = async (
 
   return announcement;
 };
-
 // Join room
 const joinRoomFromDB = async (
-  roomId: string,
   room_code: string,
   userId: string,
 ): Promise<any> => {
-  const room = await Room.findOne({ _id: roomId, room_id: room_code });
+  const room = await Room.findOne({ room_id: room_code });
   if (!room) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Room not found!');
   }
 
   // Add user to room's members array if not already present
   const isMemberExist = await RoomMember.findOne({
-    room: roomId,
+    room: room._id,
     user: userId,
   });
 
   if (isMemberExist) {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      'You are already a member of this room',
-    );
+    return isMemberExist;
   }
 
   const member = await RoomMember.create({
-    room: roomId,
+    room: room._id,
     user: userId,
   });
 
