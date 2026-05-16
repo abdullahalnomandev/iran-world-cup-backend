@@ -68,7 +68,7 @@ const getAllRoomsFromDB = async (
     const radiusInMeters = (Number(km) || 5) * 1000;
 
     const pipeline: any[] = [
-      // 1️⃣ GEO SORT (must be first)
+      // GEO SORT
       {
         $geoNear: {
           near: {
@@ -76,12 +76,11 @@ const getAllRoomsFromDB = async (
             coordinates: [Number(log), Number(lat)],
           },
           distanceField: 'distance',
-          maxDistance: radiusInMeters,
           spherical: true,
         },
       },
 
-      // 2️⃣ FILTERS
+      // FILTERS
       {
         $match: {
           ...(rest.match_id && { match_id: rest.match_id }),
@@ -89,7 +88,7 @@ const getAllRoomsFromDB = async (
         },
       },
 
-      // 3️⃣ SEARCH
+      // SEARCH
       ...(searchTerm
         ? [
             {
@@ -103,7 +102,7 @@ const getAllRoomsFromDB = async (
           ]
         : []),
 
-      // 4️⃣ MEMBERS JOIN
+      // MEMBERS
       {
         $lookup: {
           from: 'roommembers',
@@ -113,10 +112,15 @@ const getAllRoomsFromDB = async (
         },
       },
 
-      // 5️⃣ CALCULATE memberCount + isMember
+      // ADD FIELDS
       {
         $addFields: {
           memberCount: { $size: '$members' },
+
+          // 👇 nearest flag
+          isNearest: {
+            $lte: ['$distance', radiusInMeters],
+          },
 
           isMember: {
             $cond: [
@@ -133,14 +137,14 @@ const getAllRoomsFromDB = async (
         },
       },
 
-      // 6️⃣ REMOVE TEMP FIELD
+      // REMOVE TEMP
       {
         $project: {
           members: 0,
         },
       },
 
-      // 7️⃣ CREATOR JOIN
+      // CREATOR
       {
         $lookup: {
           from: 'users',
@@ -149,23 +153,34 @@ const getAllRoomsFromDB = async (
           as: 'creator',
         },
       },
+
       {
         $unwind: '$creator',
       },
 
-      // 8️⃣ PAGINATION
+      // PAGINATION
       { $skip: skip },
       { $limit: Number(limit) },
     ];
 
+    // TOTAL COUNT
+    const total = await Room.countDocuments({
+      ...(rest.match_id && { match_id: rest.match_id }),
+      ...(rest.country && { country: rest.country }),
+    });
+
+    const totalPage = Math.ceil(total / Number(limit));
+
     const data = await Room.aggregate(pipeline);
 
     return {
-      data,
       pagination: {
-        page: Number(page),
+        total,
         limit: Number(limit),
+        page: Number(page),
+        totalPage,
       },
+      data,
     };
   }
 
@@ -188,7 +203,6 @@ const getAllRoomsFromDB = async (
 
   const pagination = await roomQuery.getPaginationInfo();
 
-  // 👉 member stats fallback
   const roomIds = result.map(r => r._id);
 
   const memberStats = await RoomMember.aggregate([
@@ -244,8 +258,8 @@ const getAllRoomsFromDB = async (
   });
 
   return {
-    data,
     pagination,
+    data,
   };
 };
 // Get single room by ID
@@ -280,8 +294,7 @@ const getSingleRoomFromDB = async (
     RoomMember.countDocuments({ room: id }),
   ]);
 
-  const match = await Match.findOne(
-    { match_id: Number(result?.match_id) }  );
+  const match = await Match.findOne({ match_id: Number(result?.match_id) });
 
   if (!result) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Room not found');
@@ -660,7 +673,10 @@ const triggerRoomChantFromDB = async (
 };
 
 // Leave room
-const leaveRoomFromDB = async (roomId: string, userId: string): Promise<any> => {
+const leaveRoomFromDB = async (
+  roomId: string,
+  userId: string,
+): Promise<any> => {
   const room = await Room.findById(roomId);
   if (!room) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Room not found');
@@ -673,8 +689,6 @@ const leaveRoomFromDB = async (roomId: string, userId: string): Promise<any> => 
 
   return member;
 };
-
-
 
 export const RoomService = {
   createRoomToDB,
